@@ -1,0 +1,55 @@
+Package: dm-multiple-face-detection-on-mcxn947
+Version: 1.0
+Outgoing License: LA_OPT_NXP_Software_License v53 December 2023 - Additional Distribution License granted, license in Section 2.3 applies
+License File: LICENSE
+Description and comments: Multiple face detection based on machine learning algorithm, power by MCX-N947.
+Release Location: https://github.com/nxp-appcodehub/dm-multiple-face-detection-on-mcxn947
+Origin: NXP (BSD-3-Clause)
+        NXP (proprietary)
+        CMSIS (Apache-2.0) - https://github.com/ARM-software/CMSIS_5/releases/tag/5.6.0
+        TensorFlow Lite ( Apache-2.0) - https://github.com/tensorflow/tensorflow
+        gemmlowp (Apache-2.0) - https://github.com/google/gemmlowp
+        FlatBuffers (Apache-2.0) - https://github.com/google/flatbuffers
+        adobe-fonts (OFL-1.1 SIL Open Font License 1.1 ) - https://github.com/adobe-fonts/source-sans
+
+
+
+cmsis                      Name: CMSIS                                       
+                           Version: 5.6.0                                    
+                           Outgoing License: Apache License 2.0                             
+                           Format: source code                               
+                           Description and comments: Vendor-independent hardware          
+                           abstraction layer for microcontrollers that are   
+                           based on Arm Cortex processors, distributed by ARM. cores     
+                           Origin: ARM (Apache-2.0) -https://github.com/ARM-software/CMSIS_5/
+
+TensorFlow Lite            Name: TensorFlow Lite                             
+                           Version: 2.3.1                                    
+                           Outgoing License: Apache-2.0                      
+                           License File: eiq/tensorflow-lite/LICENSE            
+                           Format: source code                              
+                           Description: Software library for running machine learning models on mobile and embedded devices    
+                           Origin: Google Inc. The TensorFlow Authors - https://github.com/tensorflow/tensorflow   
+
+gemmlowp                   Name:gemmlowp
+                           Outgoing License: Apache-2.0                      
+                           License File: eiq/tensorflow-lite/third_party/gemmlowp/LICENSE            
+                           Format: source code                              
+                           Description: a small self-contained low-precision GEMM library    
+                           Origin: Google Inc (Apache-2.0) - https://github.com/google/gemmlowp
+
+FlatBuffers                Name:FlatBuffers
+                           Outgoing License: Apache-2.0                      
+                           License File: eiq/tensorflow-lite/third_party/flatbuffers/LICENSE            
+                           Format: source code                              
+                           Description: is a cross platform serialization library architected for
+                                        maximum memory efficiency.    
+                           Origin: Google Inc (Apache-2.0) - https://github.com/google/flatbuffers
+
+adobe-fonts                Name: adobe-fonts                        
+                           Version: 4.3.0                                    
+                           Outgoing License: OFL-1.1 SIL Open Font License 1.1       
+                           License File:  source/font/LICENSE.md                    
+                           Format: source code                             
+                           Description: Open source font array generated from adobe-fonts/source-sans.    
+                           Origin: Adobe (OFL-1.1) - https://github.com/adobe-fonts/source-sans

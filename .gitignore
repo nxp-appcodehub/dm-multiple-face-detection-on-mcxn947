@@ -1,0 +1,16 @@
+/Debug/
+.vscode/
+keil/Debug
+keil/release
+keil/Listings
+Framework/
+keil/DebugAEAI/
+keil/*Debug*
+keil/time_series_*
+*Debug.launch
+keil/*.uvguix*
+keil/*.uvoptx
+*.xls
+/Release/
+*.html
+*.launch

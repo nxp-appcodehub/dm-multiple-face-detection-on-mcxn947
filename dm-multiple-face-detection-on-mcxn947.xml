@@ -1,0 +1,25 @@
+<data:item xmlns:data="data" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="data ../../xsd/alp.xsd" id="dm-multiple-face-detection-on-mcxn947" type="demo" format="projectfile" versionSchema="1.0.0" name="multiple face detection on mcxn947">
+    <display_title>
+        Multiple face detection on mcxn947
+    </display_title>
+    <overview>
+        <![CDATA[Multiple face detection on FRDM-MCXN947]]>
+    </overview>
+    <toolchains>
+        <toolchain name="mcux"></toolchain>
+        <toolchain name="vscode"></toolchain>
+    </toolchains>
+    <families>
+        <family name="mcx"></family>
+    </families>
+    <nxp_compatible_hw>
+        <hw id="FRDM-MCXN947"></hw>
+    </nxp_compatible_hw>
+    <peripherals>
+        <peripheral name="display"></peripheral>
+        <peripheral name="pwm"></peripheral>
+    </peripherals>
+    <categories>
+        <category name="aiml"></category>
+    </categories>
+</data:item>
