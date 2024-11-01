@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 NXP
+ * Copyright 2022-2024 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -21,16 +21,16 @@ typedef int32_t NeutronError;
         1 bit = sign
 */
 #define GEN_NEUTRON_ERROR(component, category, code) ((NeutronError)( \
-    (((component) & 0xF) << 0) |                                        \
-    (((category)  & 0xF) << 3) |                                        \
-    (((code) & 0x7FFFFF) << 8)                                          \
+    ((component & 0xF) << 0) |                                        \
+    ((category  & 0xF) << 3) |                                        \
+    ((code & 0x7FFFFF) << 8)                                          \
     ))
 
 #define ENONE 0
 
-#define GET_ERROR_COMPONENT(e) (((e) >> 0) & 0x00000007)
-#define GET_ERROR_CATEGORY(e)  (((e) >> 3) & 0x0000001F)
-#define GET_ERROR_CODE(e)      (((e) >> 8) & 0x007FFFFF)
+#define GET_ERROR_COMPONENT(e) ((e >> 0) & 0x00000007)
+#define GET_ERROR_CATEGORY(e)  ((e >> 3) & 0x0000001F)
+#define GET_ERROR_CODE(e)      ((e >> 8) & 0x007FFFFF)
 
 
 /* Components ids*/
@@ -41,5 +41,11 @@ typedef enum ERROR_COMPONENT_ID {
 	ERROR_COMPONENT_DRIVER   = 0x3
 } ERROR_COMPONENT_ID;
 
+
+/// Retrieve component name as string from NeutronError code.
+char *getNeutronErrorComponent(NeutronError ne);
+
+/// Retrieve catefory as string from NeutronError code.
+char *getNeutronErrorCategory(NeutronError ne);
 
 #endif // NEUTRON_ERRORS_H

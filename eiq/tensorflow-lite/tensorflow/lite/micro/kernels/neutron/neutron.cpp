@@ -19,6 +19,10 @@ limitations under the License.
 #include "tensorflow/lite/micro/micro_context.h"
 #include "tensorflow/lite/micro/micro_log.h"
 #include "NeutronDriver.h"
+#include "tensorflow/lite/micro/kernels/neutron/neutron.h"
+
+
+static const size_t kProfilingBufferSize = 2 * 1024;
 
 #if defined(__ICCARM__)
 extern "C" void *memalign(size_t alignment, size_t size) {
@@ -41,6 +45,7 @@ typedef struct {
   NeutronModelHandle model_handle;
   int inputs_index;
   int outputs_index;
+  int profiling_buffer_index;
 } NeutronConfig;
 
 static int driver_ref_count = 0;
@@ -74,8 +79,16 @@ TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
   TF_LITE_ENSURE_STATUS(context->RequestScratchBufferInArena(
       context, node->outputs->size * sizeof(void*), &neutron->outputs_index));
 
-  TfLiteTensor* microcode = micro_context->AllocateTempInputTensor(node, node->inputs->size - 2);
-  TfLiteTensor* weights = micro_context->AllocateTempInputTensor(node, node->inputs->size - 1);
+  if (context->profiler) {
+    NeutronProfilerInterface* bprofiler = static_cast<NeutronProfilerInterface*>(context->profiler);
+    if (bprofiler->getNeutronProfilingType()) {
+      TF_LITE_ENSURE_STATUS(context->RequestScratchBufferInArena(
+          context, kProfilingBufferSize, &neutron->profiling_buffer_index));
+    }
+  }
+
+  TfLiteTensor* microcode = micro_context->AllocateTempInputTensor(node, node->inputs->size - 3);
+  TfLiteTensor* weights = micro_context->AllocateTempInputTensor(node, node->inputs->size - 2);
 
   NeutronError error = ENONE;
   neutron->model_config = {
@@ -109,7 +122,7 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
   neutron->data_config.inputs = reinterpret_cast<const void**>(context->GetScratchBuffer(context, neutron->inputs_index));
   neutron->data_config.outputs = reinterpret_cast<void**>(context->GetScratchBuffer(context, neutron->outputs_index));
 
-  for (int i = 0; i < node->inputs->size - 2; i++) {
+  for (int i = 0; i < node->inputs->size - 3; i++) {
     TfLiteEvalTensor* input = context->GetEvalTensor(context, node->inputs->data[i]);
     neutron->data_config.inputs[i] = input->data.data;
   }
@@ -125,18 +138,43 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
   }
 
   uint8_t profile = 0;
-  static NeutronTraceConfig trace_config = {
-	.traceConfig = profile,
-	.traceBuffer = nullptr,
-	.traceBufferSize = 0
+  char* profiling_buffer = nullptr;
+  size_t profiling_buffer_size = 0;
+  if (context->profiler) {
+    NeutronProfilerInterface* bprofiler = static_cast<NeutronProfilerInterface*>(context->profiler);
+    profile = bprofiler->getNeutronProfilingType();
+    if (profile) {
+      profiling_buffer = reinterpret_cast<char*>(context->GetScratchBuffer(context, neutron->profiling_buffer_index));
+      profiling_buffer_size = kProfilingBufferSize;
+    }
+  }
+
+  NeutronTraceConfig trace_config = {
+    .traceConfig = profile,
+    .traceBuffer = profiling_buffer,
+    .traceBufferSize = profiling_buffer_size
   };
   neutronSetTrace(neutron->model_handle, &trace_config);
 
   NeutronError error = ENONE;
   error = neutronRunBlocking(neutron->model_handle, &neutron->data_config);
   if (error != ENONE) {
-    MicroPrintf("Internal Neutron NPU driver error %x in model run!", error);
+    MicroPrintf("Internal NPU driver error %x", error);
     return kTfLiteError;
+  }
+
+  if (profile) {
+    size_t size;
+    char* profiling_data;
+    error = neutronGetTrace(neutron->model_handle, &profiling_data, &size);
+    if (error != ENONE) {
+      MicroPrintf("Internal NPU driver error %x", error);
+      return kTfLiteError;
+    }
+    if (context->profiler) {
+      NeutronProfilerInterface* bprofiler = static_cast<NeutronProfilerInterface*>(context->profiler);
+      bprofiler->addNeutronProfiling(profiling_data, size);
+    }
   }
 
   return kTfLiteOk;
