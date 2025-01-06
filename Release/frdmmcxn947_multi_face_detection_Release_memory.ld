@@ -1,11 +1,12 @@
 /*
  * GENERATED FILE - DO NOT EDIT
  * Copyright 2008-2013 Code Red Technologies Ltd,
- * Copyright 2013-2024 NXP
+ * Copyright 2013-2025 NXP
+ * SPDX-License-Identifier: BSD-3-Clause
  * Generated linker script file for MCXN947
  * Created from memory.ldt by FMCreateLinkMemory
  * Using Freemarker v2.3.30
- * MCUXpresso IDE v11.9.0_prc2 [Build 2107] [2023-11-24] on Apr 11, 2024, 3:29:29 PM
+ * MCUXpresso IDE v24.9 [Build 25] [2024-09-26] on Jan 6, 2025, 4:12:07 PM
  */
 
 MEMORY

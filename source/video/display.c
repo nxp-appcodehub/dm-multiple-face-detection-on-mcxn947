@@ -15,7 +15,7 @@
 #include "lcd_impl_flexio.h"
 #include "st7796_lcd.h"
 #include "video.h"
-#include "font\ASCII_consolas_3618.h"
+#include "ASCII_consolas_3618.h"
 /****************************************************************
 LCD display
 ****************************************************************/
