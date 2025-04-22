@@ -534,14 +534,14 @@ void BOARD_InitPins(void)
                       | PORT_PCR_IBE(PCR_IBE_ibe1));
 
     /* PORT0_6 (pin C14) is configured as clkout */
-    PORT_SetPinMux(PORT0, 6U, kPORT_MuxAlt12);
+    //PORT_SetPinMux(PORT0, 6U, kPORT_MuxAlt12);
 
-    PORT0->PCR[6] = ((PORT0->PCR[6] &
+    //PORT0->PCR[6] = ((PORT0->PCR[6] &
                       /* Mask bits to zero which are setting */
-                      (~(PORT_PCR_IBE_MASK)))
+      //                (~(PORT_PCR_IBE_MASK)))
 
                      /* Input Buffer Enable: Enables. */
-                     | PORT_PCR_IBE(PCR_IBE_ibe1));
+        //             | PORT_PCR_IBE(PCR_IBE_ibe1));
     /* PORT2_2 (pin H3) is configured as CLKOUT CAM CLKIn */
      PORT_SetPinMux(PORT2, 2U, kPORT_MuxAlt1);
 
@@ -675,16 +675,16 @@ void BOARD_InitPins(void)
                      /* Input Buffer Enable: Enables. */
                      | PORT_PCR_IBE(PCR_IBE_ibe1));
     /* PORT0_6 (pin B1) is configured as CLKOUT*/
-    PORT_SetPinMux(PORT0, 6U, kPORT_MuxAlt12);										 
-    PORT0->PCR[6] = ((PORT0->PCR[6] &
+    //PORT_SetPinMux(PORT0, 6U, kPORT_MuxAlt12);
+    //PORT0->PCR[6] = ((PORT0->PCR[6] &
                       /* Mask bits to zero which are setting */
-                      (~(PORT_PCR_SRE_MASK | PORT_PCR_IBE_MASK)))
+    //                  (~(PORT_PCR_SRE_MASK | PORT_PCR_IBE_MASK)))
 
                      /* Slew Rate Enable: Fast. */
-                     | PORT_PCR_SRE(PCR_SRE_sre0)
+    //                 | PORT_PCR_SRE(PCR_SRE_sre0)
 
                      /* Input Buffer Enable: Enables. */
-                     | PORT_PCR_IBE(PCR_IBE_ibe1));
+     //                | PORT_PCR_IBE(PCR_IBE_ibe1));
 										 
 										 
 	/* PORT1_22 (pin A4) is configured as PIO1_22 */
