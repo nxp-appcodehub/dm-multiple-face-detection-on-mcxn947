@@ -31,7 +31,7 @@ The machine learning algorithm is accelerated by the NPU inside.
 
 ## 1. Software <a name="step1"></a>
 
-- Download [SDK_2_14_0_FRDM-MCXN947](https://mcuxpresso.nxp.com/en/welcome)
+- Download [SDK_2_16_0_FRDM-MCXN947](https://mcuxpresso.nxp.com/en/welcome)
 - Download and install [MCUXpresso IDE V11.9.0 or later](https://www.nxp.com/design/design-center/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE).
 - MCUXpresso for Visual Studio Code: This example supports MCUXpresso for Visual Studio Code, for more information about how to use Visual Studio Code please refer [here](https://www.nxp.com/design/training/getting-started-with-mcuxpresso-for-visual-studio-code:TIP-GETTING-STARTED-WITH-MCUXPRESSO-FOR-VS-CODE).
 
