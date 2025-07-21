@@ -78,7 +78,7 @@ void ezh_start(void)
     g_camera_complete_flag=0;
 
 	SMARTDMA_InitWithoutFirmware();
-	SMARTDMA_InstallFirmware(ezh_code,s_smartdmaCameraFirmware,
+	SMARTDMA_InstallFirmware((uint32_t)ezh_code,s_smartdmaCameraFirmware,
 						 SMARTDMA_CAMERA_FIRMWARE_SIZE);
 	SMARTDMA_InstallCallback(ezh_camera_callback, NULL);
 	NVIC_EnableIRQ(SMARTDMA_IRQn);
@@ -108,7 +108,7 @@ void ezh_camera_display_callback(void)
 		camera_buffer_addr = (uint32_t)(&g_camera_buffer[320*15*2/4]);
 	}
 
-	ezh_copy_slice_to_model_input(p_coord_index,(uint16_t*)g_camera_buffer + ((p_coord_index) & 1) * BUFF_HEIGHT * CAMERA_WIDTH,CAMERA_WIDTH,BUFF_HEIGHT, CAMERA_HEIGHT/BUFF_HEIGHT);
+	ezh_copy_slice_to_model_input(p_coord_index,(uint32_t)((uint16_t*)g_camera_buffer + ((p_coord_index) & 1) * BUFF_HEIGHT * CAMERA_WIDTH),CAMERA_WIDTH,BUFF_HEIGHT, CAMERA_HEIGHT/BUFF_HEIGHT);
 	display_show_slice(p_coord_index, (uint32_t)(camera_buffer_addr),CAMERA_HEIGHT/BUFF_HEIGHT);
 
 	g_camera_complete_flag=0;

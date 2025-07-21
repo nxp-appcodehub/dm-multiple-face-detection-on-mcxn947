@@ -25,6 +25,7 @@ void ezh_start();
 void display_init();
 void display_show_bg_image();
 void display_show_slice(uint32_t g_stripe_index, uint32_t buffer,uint32_t maxidx);
+void ezh_copy_slice_to_model_input(uint32_t idx, uint32_t cam_slice_buffer, uint32_t cam_slice_width, uint32_t cam_slice_height, uint32_t max_idx);
 #if defined(__cplusplus)
 }
 #endif /* __cplusplus */

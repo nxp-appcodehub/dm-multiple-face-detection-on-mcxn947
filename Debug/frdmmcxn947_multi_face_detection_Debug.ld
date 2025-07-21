@@ -6,7 +6,7 @@
  * Generated linker script file for MCXN947
  * Created from linkscript.ldt by FMCreateLinkLibraries
  * Using Freemarker v2.3.30
- * MCUXpresso IDE v24.9 [Build 25] [2024-09-26] on Jan 6, 2025, 4:10:53 PM
+ * MCUXpresso IDE v25.6 [Build 136] [2025-06-27] on Jul 21, 2025, 5:12:25 PM
  */
 
 INCLUDE "frdmmcxn947_multi_face_detection_Debug_library.ld"
