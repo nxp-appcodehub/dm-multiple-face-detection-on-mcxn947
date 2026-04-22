@@ -25,14 +25,15 @@ The machine learning algorithm is accelerated by the NPU inside.
 1. [Software](#step1)
 2. [Hardware](#step2)
 3. [Setup](#step3)
-4. [FAQs](#step4)
-5. [Support](#step5)
-6. [Release Notes](#step6)
+4. [Update Neutron libraries](#step4)
+5. [FAQs](#step5)
+6. [Support](#step6)
+7. [Release Notes](#step7)
 
 ## 1. Software <a name="step1"></a>
 
-- Download [SDK_2_16_0_FRDM-MCXN947](https://mcuxpresso.nxp.com/en/welcome)
-- Download and install [MCUXpresso IDE V11.9.0 or later](https://www.nxp.com/design/design-center/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE).
+- Download [SDK_26_03_FRDM-MCXN947](https://mcuxpresso.nxp.com/en/welcome)
+- Download and install [MCUXpresso IDE V25.6 or later](https://www.nxp.com/design/design-center/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE).
 - MCUXpresso for Visual Studio Code: This example supports MCUXpresso for Visual Studio Code, for more information about how to use Visual Studio Code please refer [here](https://www.nxp.com/design/training/getting-started-with-mcuxpresso-for-visual-studio-code:TIP-GETTING-STARTED-WITH-MCUXPRESSO-FOR-VS-CODE).
 
 ## 2. Hardware <a name="step2"></a>
@@ -102,11 +103,32 @@ Reset the board, the demo will start detecting the person, if faces are detected
 
 ![](image/face_detection.jpeg)
 
-## 4. FAQs <a name="step4"></a>
+## 4. Update Neutron libraries<a name="step4"></a>
+It is always recommended to use the latest eIQ Neutron SDK available [here](https://www.nxp.com/design/design-center/software/eiq-ai-development-environment/eiq-toolkit-for-end-to-end-model-development-and-deployment:EIQ-TOOLKIT#downloads).
+
+The package will include the latest Neutron libraries and tools to convert the model to latest eIQ Neutron SDK.
+To update the Neutron libraries in the project, replace the following files with the ones in the package:
+
+| File name            | Directory in eIQ Neutron SDK   | Directory in project       |
+| -------------------- | ------------------------------ | -------------------------- |
+| libNeutronDriver.a   | target\mcxn94x\board\          | eiq\neutron\mcxn\cm33      |
+| libNeutronFirmware.a | target\mcxn94x\board\          | eiq\neutron\mcxn\cm33      |
+| NeutronDriver.h      | target\mcxn94x\driver\include\ | eiq\neutron\driver\include |
+| NeutronErrors.h      | target\mcxn94x\common\include\ | eiq\neutron\common\include |
+
+To update the model, locate the original non-converted model and use the neutron-converter tool from the eIQ Neutron SDK package using:  
+neutron-converter --input face_detect.tflite --output face_detect_npu.tflite --target mcxn94x
+
+In model_data.s (source\model\) the model name can be replaced by the converted model face_detect_npu.tflite.
+
+For more information, refer to the lab guide [here](https://community.nxp.com/t5/MCX-Microcontrollers-Knowledge/Using-a-Camera-with-FRDM-MCXN947-for-Vision-AI-ML/ta-p/2313227).
+
+
+## 5. FAQs <a name="step5"></a>
 
 *No FAQs have been identified for this project.*
 
-## 5. Support <a name="step5"></a>
+## 6. Support <a name="step6"></a>
 
 *Please contact NXP for additional support.*
 
@@ -135,10 +157,11 @@ Reset the board, the demo will start detecting the person, if faces are detected
 [![Follow us on Facebook](https://img.shields.io/badge/Facebook-Follow%20us%20on%20Facebook-blue.svg)](https://www.facebook.com/nxpsemi/)
 [![Follow us on Twitter](https://img.shields.io/badge/Twitter-Follow%20us%20on%20Twitter-white.svg)](https://twitter.com/NXP)
 
-## 6. Release Notes <a name="step7"></a>
+## 7. Release Notes <a name="step7"></a>
 
 | Version | Description / Update                    |                                  Date |
 | :-----: | --------------------------------------- | ------------------------------------: |
+|   2.0   | Update eIQ folder and model for eIQ Neutron 3.1.0  | April 21<sup>th</sup> 2026 |
 |   1.0   | Initial release on Application Code Hub | January 30<sup>th</sup> 2024 |
 
 

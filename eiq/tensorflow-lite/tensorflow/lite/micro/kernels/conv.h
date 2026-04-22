@@ -1,4 +1,4 @@
-/* Copyright 2023 The TensorFlow Authors. All Rights Reserved.
+/* Copyright 2024 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,6 +49,14 @@ struct OpDataConv {
   // A buffer used to store unpacked filter values. This is used if the source
   // tensor is of n-bit precision that cannot be easily processed by kernels.
   int filter_buffer_index;
+
+#ifdef USE_TFLM_COMPRESSION
+
+  // scratch buffers for compressed tensors
+  int weights_scratch_index;
+  int bias_scratch_index;
+
+#endif  // USE_TFLM_COMPRESSION
 };
 
 extern const int kConvInputTensor;
@@ -94,6 +102,15 @@ inline TFLMRegistration Register_CONV_2D_INT8REF() {
   return Register_CONV_2D();
 }
 #endif  // defined(XTENSA)
+
+#if defined(CMSIS_NN)
+// Returns a TFLMRegistration struct for kernel variant that only supports
+// int8 activations and int4 weights and uses the latency optimized
+// implementations.
+TFLMRegistration Register_CONV_2D_INT4();
+#else
+inline TFLMRegistration Register_CONV_2D_INT4() { return Register_CONV_2D(); }
+#endif  // defined(CMSIS_NN)
 
 #if defined(CMSIS_NN) || defined(XTENSA)
 // Returns a TFLMRegistration struct for kernel variant that only supports

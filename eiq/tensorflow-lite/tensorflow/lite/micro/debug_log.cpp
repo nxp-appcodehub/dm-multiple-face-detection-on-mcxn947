@@ -1,5 +1,5 @@
 /* Copyright 2020 The TensorFlow Authors. All Rights Reserved.
-   Copyright 2022-2024 NXP
+   Copyright 2022-2025 NXP
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,9 +17,15 @@ limitations under the License.
 #include "tensorflow/lite/micro/debug_log.h"
 
 #ifndef TF_LITE_STRIP_ERROR_STRINGS
+#include <cstdio>
+#endif
+
+#ifndef TF_LITE_STRIP_ERROR_STRINGS
+#ifdef SDK_DEBUGCONSOLE
 extern "C" {
 #include "fsl_debug_console.h"
 }
+#endif /* SDK_DEBUGCONSOLE */
 #endif
 
 extern "C" void DebugLog(const char* format, va_list args) {
@@ -30,9 +36,17 @@ extern "C" void DebugLog(const char* format, va_list args) {
 #if SDK_DEBUGCONSOLE == DEBUGCONSOLE_DISABLE /* Disable debug console */
 #elif SDK_DEBUGCONSOLE == DEBUGCONSOLE_REDIRECT_TO_SDK /* Select printf, scanf, putchar, getchar of SDK version. */
   DbgConsole_Vprintf(format, args);
-#elif SDK_DEBUGCONSOLE == \
-    DEBUGCONSOLE_REDIRECT_TO_TOOLCHAIN /* Select printf, scanf, putchar, getchar of toolchain. \ */
+#elif !defined(SDK_DEBUGCONSOLE) || (SDK_DEBUGCONSOLE == \
+    DEBUGCONSOLE_REDIRECT_TO_TOOLCHAIN) /* Select printf, scanf, putchar, getchar of toolchain. \ */
   vprintf(format, args);
 #endif /* SDK_DEBUGCONSOLE */
-#endif
+#endif /* TF_LITE_STRIP_ERROR_STRINGS */
 }
+
+#ifndef TF_LITE_STRIP_ERROR_STRINGS
+// Only called from MicroVsnprintf (micro_log.h)
+extern "C" int DebugVsnprintf(char* buffer, size_t buf_size, const char* format,
+                              va_list vlist) {
+  return vsnprintf(buffer, buf_size, format, vlist);
+}
+#endif

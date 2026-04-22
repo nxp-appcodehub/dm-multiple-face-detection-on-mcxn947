@@ -5,7 +5,7 @@
  *  Licensed under the OFL-1.1 SIL Open Font License 1.1
  */
 
-// font array generated from adodb free font "sans"
+// font array generated from adobe free font "sans"
 
 
 

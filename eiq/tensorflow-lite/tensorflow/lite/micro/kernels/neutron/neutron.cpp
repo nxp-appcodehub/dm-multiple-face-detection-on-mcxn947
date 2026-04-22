@@ -19,10 +19,6 @@ limitations under the License.
 #include "tensorflow/lite/micro/micro_context.h"
 #include "tensorflow/lite/micro/micro_log.h"
 #include "NeutronDriver.h"
-#include "tensorflow/lite/micro/kernels/neutron/neutron.h"
-
-
-static const size_t kProfilingBufferSize = 2 * 1024;
 
 #if defined(__ICCARM__)
 extern "C" void *memalign(size_t alignment, size_t size) {
@@ -45,8 +41,28 @@ typedef struct {
   NeutronModelHandle model_handle;
   int inputs_index;
   int outputs_index;
-  int profiling_buffer_index;
-} NeutronConfig;
+} NeutronTfLiteConfig;
+
+#ifdef EXTERNAL_MEM
+#ifndef SCRATCH_WEIGHTS_SRAM_SIZE
+#define SCRATCH_WEIGHTS_SRAM_SIZE  1200*1024
+#endif
+
+static uint8_t scratchWeightsBuffer[SCRATCH_WEIGHTS_SRAM_SIZE] __attribute__((aligned(16))) __attribute__((section("NonCacheable")));
+static NeutronConfig *n_config = nullptr;
+
+void copy(void *dst, void *src, uint32_t size, uint32_t channel) {
+if (((uintptr_t)dst + size - (uintptr_t)scratchWeightsBuffer) > SCRATCH_WEIGHTS_SRAM_SIZE){
+      MicroPrintf("scratchWeightsBuffer Overflow, Requested: %x SCRATCH_WEIGHTS_SRAM_SIZE: %x\r\n",
+		      ((uintptr_t)dst + size - (uintptr_t)scratchWeightsBuffer), SCRATCH_WEIGHTS_SRAM_SIZE);
+      while(1);
+      return;
+  }
+  memcpy(dst, src, size);
+}
+void wait(uint32_t channel) {
+}
+#endif
 
 static int driver_ref_count = 0;
 
@@ -61,7 +77,7 @@ void* Init(TfLiteContext* context, const char* buffer, size_t length) {
     }
   }
 
-  return context->AllocatePersistentBuffer(context, sizeof(NeutronConfig));
+  return context->AllocatePersistentBuffer(context, sizeof(NeutronTfLiteConfig));
 }
 
 TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
@@ -71,7 +87,7 @@ TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
   TF_LITE_ENSURE(context, node->outputs->size > 0);
 
   TfLiteStatus status = kTfLiteOk;
-  NeutronConfig* neutron = static_cast<NeutronConfig*>(node->user_data);
+  NeutronTfLiteConfig* neutron = static_cast<NeutronTfLiteConfig*>(node->user_data);
   MicroContext* micro_context = GetMicroContext(context);
 
   TF_LITE_ENSURE_STATUS(context->RequestScratchBufferInArena(
@@ -79,28 +95,30 @@ TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
   TF_LITE_ENSURE_STATUS(context->RequestScratchBufferInArena(
       context, node->outputs->size * sizeof(void*), &neutron->outputs_index));
 
-  if (context->profiler) {
-    NeutronProfilerInterface* bprofiler = static_cast<NeutronProfilerInterface*>(context->profiler);
-    if (bprofiler->getNeutronProfilingType()) {
-      TF_LITE_ENSURE_STATUS(context->RequestScratchBufferInArena(
-          context, kProfilingBufferSize, &neutron->profiling_buffer_index));
-    }
-  }
-
   TfLiteTensor* microcode = micro_context->AllocateTempInputTensor(node, node->inputs->size - 3);
   TfLiteTensor* weights = micro_context->AllocateTempInputTensor(node, node->inputs->size - 2);
+  TfLiteTensor* kernels = micro_context->AllocateTempInputTensor(node, node->inputs->size - 1);
 
   NeutronError error = ENONE;
   neutron->model_config = {
     .microcode = microcode->data.data,
-    .weights = weights->data.data
+    .weights = weights->data.data,
+    .kernels = kernels->data.data
   };
-  neutron->model_handle = NEUTRON_INVALID_HANDLE;
+  
+  NeutronModelHandle hdl_mem   = static_cast<NeutronModelHandle>(
+          context->AllocatePersistentBuffer(context, neutronGetModelContextSize()));
+  if (hdl_mem == nullptr)
+  {
+      return kTfLiteError;
+  }
+  neutron->model_handle = hdl_mem;
   error = neutronModelPrepare(&neutron->model_config, &neutron->model_handle);
+
   if (error != ENONE) {
     if ((GET_ERROR_COMPONENT(error) == ERROR_COMPONENT_DRIVER) &&
         (GET_ERROR_CATEGORY(error) == ERROR_CATEGORY_DRIVER_UCODE)) {
-      MicroPrintf("Incompatible Neutron NPU microcode and driver versions! Please, convert the model with Neutron converter tool intended for this SDK release.", error);
+      MicroPrintf("Incompatible Neutron NPU microcode and driver versions! Please, convert the model with Neutron converter tool intended for this SDK release.");
     } else {
       MicroPrintf("Internal Neutron NPU driver error %x in model prepare!", error);
     }
@@ -109,6 +127,18 @@ TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) {
 
   micro_context->DeallocateTempTfLiteTensor(microcode);
   micro_context->DeallocateTempTfLiteTensor(weights);
+  micro_context->DeallocateTempTfLiteTensor(kernels);
+
+#ifdef EXTERNAL_MEM
+  n_config = static_cast<NeutronConfig*>(context->AllocatePersistentBuffer(context, sizeof(NeutronConfig)));
+  n_config->copy = copy;
+  n_config->wait = wait;
+  error = neutronSetConfig(n_config);
+  if (error != ENONE) {
+    MicroPrintf("Set Neutron NPU config error %x in model prepare!", error);
+    return kTfLiteError;
+  }
+#endif
 
   return status;
 }
@@ -117,7 +147,7 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
   TFLITE_DCHECK(context != nullptr);
   TFLITE_DCHECK(node->user_data != nullptr);
 
-  NeutronConfig* neutron = static_cast<NeutronConfig*>(node->user_data);
+  NeutronTfLiteConfig* neutron = static_cast<NeutronTfLiteConfig*>(node->user_data);
 
   neutron->data_config.inputs = reinterpret_cast<const void**>(context->GetScratchBuffer(context, neutron->inputs_index));
   neutron->data_config.outputs = reinterpret_cast<void**>(context->GetScratchBuffer(context, neutron->outputs_index));
@@ -133,48 +163,30 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
   }
 
   if (node->outputs->size > 0) {
-    TfLiteEvalTensor* scratch = context->GetEvalTensor(context, node->outputs->data[node->outputs->size - 1]);
+    TfLiteEvalTensor* scratch = context->GetEvalTensor(context, node->outputs->data[node->outputs->size - 3]);
     neutron->data_config.outputs[node->outputs->size - 1] = scratch->data.data;
+    neutron->data_config.scratch = scratch->data.data;
   }
 
+#ifdef EXTERNAL_MEM
+  neutron->data_config.scratchWeights = (void *)scratchWeightsBuffer;
+#endif
+
+#ifdef NEUTRON_PROFILE
   uint8_t profile = 0;
-  char* profiling_buffer = nullptr;
-  size_t profiling_buffer_size = 0;
-  if (context->profiler) {
-    NeutronProfilerInterface* bprofiler = static_cast<NeutronProfilerInterface*>(context->profiler);
-    profile = bprofiler->getNeutronProfilingType();
-    if (profile) {
-      profiling_buffer = reinterpret_cast<char*>(context->GetScratchBuffer(context, neutron->profiling_buffer_index));
-      profiling_buffer_size = kProfilingBufferSize;
-    }
-  }
-
-  NeutronTraceConfig trace_config = {
-    .traceConfig = profile,
-    .traceBuffer = profiling_buffer,
-    .traceBufferSize = profiling_buffer_size
+  static NeutronTraceConfig trace_config = {
+	.traceConfig = profile,
+	.traceBuffer = nullptr,
+	.traceBufferSize = 0
   };
   neutronSetTrace(neutron->model_handle, &trace_config);
-
+#endif
+  
   NeutronError error = ENONE;
   error = neutronRunBlocking(neutron->model_handle, &neutron->data_config);
   if (error != ENONE) {
-    MicroPrintf("Internal NPU driver error %x", error);
+    MicroPrintf("Internal Neutron NPU driver error %x in model run!", error);
     return kTfLiteError;
-  }
-
-  if (profile) {
-    size_t size;
-    char* profiling_data;
-    error = neutronGetTrace(neutron->model_handle, &profiling_data, &size);
-    if (error != ENONE) {
-      MicroPrintf("Internal NPU driver error %x", error);
-      return kTfLiteError;
-    }
-    if (context->profiler) {
-      NeutronProfilerInterface* bprofiler = static_cast<NeutronProfilerInterface*>(context->profiler);
-      bprofiler->addNeutronProfiling(profiling_data, size);
-    }
   }
 
   return kTfLiteOk;
@@ -184,7 +196,7 @@ void Free(TfLiteContext* context, void* buffer) {
   TFLITE_DCHECK(context != nullptr);
   TFLITE_DCHECK(buffer != nullptr);
 
-  NeutronConfig* neutron = static_cast<NeutronConfig*>(buffer);
+  NeutronTfLiteConfig* neutron = static_cast<NeutronTfLiteConfig*>(buffer);
 
   NeutronError error = ENONE;
   error = neutronModelUnprepare(neutron->model_handle);
@@ -198,6 +210,7 @@ void Free(TfLiteContext* context, void* buffer) {
       MicroPrintf("Internal Neutron NPU driver error %x in deinit!", error);
     }
   }
+
 }
 
 }  // namespace

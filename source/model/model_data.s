@@ -40,7 +40,7 @@
 
 
 npu_model_data:
-	.incbin "../source/model/face_detect_converted.tflite"
+	.incbin "../source/model/face_detect_npu.tflite"
 npu_model_data_end:
 
 od_image_data:

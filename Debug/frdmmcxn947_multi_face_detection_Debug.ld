@@ -1,12 +1,12 @@
 /*
  * GENERATED FILE - DO NOT EDIT
  * Copyright 2008-2013 Code Red Technologies Ltd,
- * Copyright 2013-2025 NXP
+ * Copyright 2013-2026 NXP
  * SPDX-License-Identifier: BSD-3-Clause
  * Generated linker script file for MCXN947
  * Created from linkscript.ldt by FMCreateLinkLibraries
  * Using Freemarker v2.3.30
- * MCUXpresso IDE v25.6 [Build 136] [2025-06-27] on Jul 21, 2025, 5:12:25 PM
+ * MCUXpresso IDE v25.6 [Build 136] [2025-06-27] on Apr 23, 2026, 9:04:58 AM
  */
 
 INCLUDE "frdmmcxn947_multi_face_detection_Debug_library.ld"
@@ -126,6 +126,7 @@ SECTIONS
     /* USB_RAM */
     .m_usb_data (NOLOAD) :
     {
+        *(m_usb_bdt)
         *(m_usb_global)
     } > USB_RAM AT> USB_RAM
     /* DATA section for SRAMX */
